@@ -1131,53 +1131,77 @@
             zone.innerHTML = '';
 
             const copies = parseInt(document.getElementById('copiesCount').value) || 1;
-            const allLabelsData = [];
+            
+            // 1. Préparer une "semaine" de référence (tous les éléments visibles)
+            const weekLabels = [];
+            for (const [day, data] of Object.entries(menuData)) {
+                if (data.hidden) continue;
+                data.items.forEach((item) => {
+                    const dishName = (item.val || item.name).trim();
+                    weekLabels.push(`<div class="name">${dishName}</div><div class="price">${item.price}</div>`);
+                });
+            }
 
+            if (weekLabels.length === 0) return;
+
+            const cleanPages = []; // Stockera les pages 100% pleines (30 étiquettes)
+            const leftoverSets = []; // Stockera les résidus de chaque exemplaire (moins de 30)
+
+            // 2. Répartir les étiquettes de chaque exemplaire demandé
             for (let c = 0; c < copies; c++) {
-                for (const [day, data] of Object.entries(menuData)) {
-                    if (data.hidden) continue; // On saute les jours masqués
-
-                    data.items.forEach((item, itemIndex) => {
-                        const inputId = `input-${day}-${itemIndex}`;
-                        const inputEl = document.getElementById(inputId);
-
-                    if (item.val || item.name) {
-                        const dishName = (item.val || item.name).trim();
-                        allLabelsData.push(`<div class="name">${dishName}</div><div class="price">${item.price}</div>`);
-                    }
-                    });
+                const currentCopy = [...weekLabels];
+                
+                // On extrait d'abord toutes les pages complètes de 30 pour cet exemplaire
+                while (currentCopy.length >= 30) {
+                    cleanPages.push(currentCopy.splice(0, 30));
+                }
+                
+                // S'il reste un surplus (moins de 30), on le garde pour le regrouper plus tard
+                if (currentCopy.length > 0) {
+                    leftoverSets.push(currentCopy);
                 }
             }
 
-            // 2. Rajouter des cases vides (null) si on n'est pas un multiple exact de 30 cases (1 page)
-            const remainder = allLabelsData.length % 30;
-            if (remainder > 0 || allLabelsData.length === 0) {
-                const padding = 30 - remainder;
-                for (let i = 0; i < padding; i++) {
-                    allLabelsData.push(null);
+            // 3. Regrouper les surplus ensemble sur des pages "mixtes" à la fin
+            // Strategie : on remplit une page tant que le surplus suivant rentre entier.
+            const mixedPages = [];
+            let currentMixedPage = [];
+
+            leftoverSets.forEach(set => {
+                if (currentMixedPage.length + set.length > 30) {
+                    // Si ça ne rentre pas, on clôture la page actuelle et on en commence une nouvelle
+                    while (currentMixedPage.length < 30) currentMixedPage.push(null);
+                    mixedPages.push(currentMixedPage);
+                    currentMixedPage = [...set];
+                } else {
+                    // Sinon, on ajoute le surplus à la suite sur la même page
+                    currentMixedPage.push(...set);
                 }
+            });
+
+            // On ajoute la toute dernière page de surplus si elle contient quelque chose
+            if (currentMixedPage.length > 0) {
+                while (currentMixedPage.length < 30) currentMixedPage.push(null);
+                mixedPages.push(currentMixedPage);
             }
 
-            // 3. Dessiner la grille page par page (blocs de 30)
-            for (let page = 0; page < allLabelsData.length; page += 30) {
+            // 4. Fusionner les pages propres puis les pages de surplus et les afficher
+            const finalPages = [...cleanPages, ...mixedPages];
+
+            finalPages.forEach(pageItems => {
                 const pageDiv = document.createElement('div');
                 pageDiv.className = 'a4-page';
 
-                // Ajouter les 30 étiquettes de cette page
-                for (let i = 0; i < 30; i++) {
-                    const itemHtml = allLabelsData[page + i];
+                pageItems.forEach(itemHtml => {
                     const div = document.createElement('div');
                     div.className = 'label';
-
                     if (itemHtml) {
                         div.innerHTML = itemHtml;
                     }
-
                     pageDiv.appendChild(div);
-                }
-
+                });
                 zone.appendChild(pageDiv);
-            }
+            });
         }
 
         // Chargement initial
