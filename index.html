@@ -802,8 +802,12 @@
                             <span class="template-name">Dessert</span>
                             <span class="template-price">3,40€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Friach\'Bol', '7,20€')">
-                            <span class="template-name">Friach'Bol</span>
+                        <div class="template-card" onclick="confirmAddItem('Fraich\'Bol', '8,20€')">
+                            <span class="template-name">Fraich'Bol</span>
+                            <span class="template-price">8,20€</span>
+                        </div>
+                        <div class="template-card" onclick="confirmAddItem('Quiche', '7,20€')">
+                            <span class="template-name">Quiche</span>
                             <span class="template-price">7,20€</span>
                         </div>
                         <div class="template-card" onclick="confirmAddItem('Pique-mie bistro', '6,00€')">
@@ -976,7 +980,7 @@
 
                         row.innerHTML = `
                         <div class="cat-info">
-                            <input type="text" class="cat-type-input" value="${item.name}" 
+                            <input type="text" class="cat-type-input" value="${(item.name || '').replace(/\"/g, '&quot;')}" 
                                    oninput="updateItemName('${day}', ${itemIndex}, this.value)"
                                    placeholder="Catégorie...">
                             <div class="cat-controls">
@@ -985,7 +989,7 @@
                             </div>
                         </div>
                         <div class="cat-input">
-                            <input type="text" id="${inputId}" value="${item.val || ''}" 
+                            <input type="text" id="${inputId}" value="${(item.val || '').replace(/\"/g, '&quot;')}" 
                                    placeholder="Nom du plat..." 
                                    oninput="updateItemVal('${day}', ${itemIndex}, this.value)">
                         </div>
