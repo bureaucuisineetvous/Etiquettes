@@ -116,7 +116,7 @@
                 padding: calc(85vh * (3/297));
                 text-align: center;
                 font-family: 'Sifonn', sans-serif;
-                font-size: calc(85vh * 0.013); /* Augmenté pour correspondre au 12pt d'impression */
+                font-size: calc(85vh * 0.013); /* Ajusté pour correspondre au 11pt d'impression */
                 line-height: 1.2;
                 overflow: hidden;
                 word-wrap: break-word;
@@ -725,7 +725,7 @@
                 min-height: 50mm !important;
                 max-height: 50mm !important;
                 padding: 3mm !important;
-                font-size: 12pt !important;
+                font-size: 11pt !important;
                 box-sizing: border-box !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -1166,27 +1166,21 @@
                 }
             }
 
-            // 3. Regrouper les surplus ensemble sur des pages "mixtes" à la fin
-            // Strategie : on remplit une page tant que le surplus suivant rentre entier.
+            // 3. Regrouper tous les surplus de manière continue pour éviter le blanc au maximum
             const mixedPages = [];
-            let currentMixedPage = [];
+            const allLeftovers = [];
 
             leftoverSets.forEach(set => {
-                if (currentMixedPage.length + set.length > 30) {
-                    // Si ça ne rentre pas, on clôture la page actuelle et on en commence une nouvelle
-                    while (currentMixedPage.length < 30) currentMixedPage.push(null);
-                    mixedPages.push(currentMixedPage);
-                    currentMixedPage = [...set];
-                } else {
-                    // Sinon, on ajoute le surplus à la suite sur la même page
-                    currentMixedPage.push(...set);
-                }
+                allLeftovers.push(...set);
             });
 
-            // On ajoute la toute dernière page de surplus si elle contient quelque chose
-            if (currentMixedPage.length > 0) {
-                while (currentMixedPage.length < 30) currentMixedPage.push(null);
-                mixedPages.push(currentMixedPage);
+            for (let i = 0; i < allLeftovers.length; i += 30) {
+                const pageItems = allLeftovers.slice(i, i + 30);
+                // On ajoute la page complétée ou non avec des blancs
+                while (pageItems.length < 30) {
+                    pageItems.push(null);
+                }
+                mixedPages.push(pageItems);
             }
 
             // 4. Fusionner les pages propres puis les pages de surplus et les afficher
