@@ -411,8 +411,23 @@
             }
             .options-section input { cursor: pointer; }
             
-            #printZone.show-borders .label {
+            #printZone.show-borders .label[class*="lot-"] {
                 border: 0.1pt solid #ccc !important;
+            }
+            #printZone.show-borders .label.lot-1 {
+                border: 0.1pt solid #000000 !important;
+            }
+            #printZone.show-borders .label.lot-2 {
+                border: 1pt dashed #2563eb !important;
+            }
+            #printZone.show-borders .label.lot-3 {
+                border: 1.2pt dotted #16a34a !important;
+            }
+            #printZone.show-borders .label.lot-4 {
+                border: 1.5pt double #dc2626 !important;
+            }
+            #printZone.show-borders .label.lot-5 {
+                border: 1.5pt dashed #7c3aed !important;
             }
         }
 
@@ -743,8 +758,23 @@
                 border: none !important; /* Par défaut pas de bordure à l'impression */
             }
 
-            .show-borders .label {
+            .show-borders .label[class*="lot-"] {
                 border: 0.1pt solid black !important; /* Bordure si option cochée */
+            }
+            .show-borders .label.lot-1 {
+                border: 0.1pt solid #000000 !important;
+            }
+            .show-borders .label.lot-2 {
+                border: 1.2pt dashed #2563eb !important;
+            }
+            .show-borders .label.lot-3 {
+                border: 1.2pt dotted #16a34a !important;
+            }
+            .show-borders .label.lot-4 {
+                border: 1.8pt double #dc2626 !important;
+            }
+            .show-borders .label.lot-5 {
+                border: 1.8pt dashed #7c3aed !important;
             }
 
             .label .price {
@@ -872,8 +902,8 @@
         <div class="modal-content">
             <span class="close-modal" onclick="toggleImportModal(false)">&times;</span>
             <h2>📋 Importation Rapide</h2>
-            <p>Collez ici le texte structuré (Pâtes, Plat chaud, Végé...) :</p>
-            <textarea id="importArea" placeholder="Collez vos lignes ici..."></textarea>
+            <p>Collez ici le tableau de planning hebdomadaire (copié depuis Excel/tableur) :</p>
+            <textarea id="importArea" placeholder="Copiez-collez directement les lignes du planning (format : Catégorie [TAB] DLC [TAB] REF [TAB] Nom du plat...)"></textarea>
             <button class="btn-generate" onclick="processImport()">🚀 Remplir la semaine</button>
         </div>
     </div>
@@ -915,42 +945,33 @@
     </div>
 
     <script>
-        const defaultMenu = {
-            "Lundi": {
-                items: [
-                    { name: "Pâtes", price: "8,20€", val: "" },
-                    { name: "Panier du jour", price: "8,90€", val: "" },
-                    { name: "Végé", price: "8,20€", val: "" }
-                ], hidden: false
-            },
-            "Mardi": {
-                items: [
-                    { name: "Poisson", price: "9,10€", val: "" },
-                    { name: "Végé", price: "8,20€", val: "" }
-                ], hidden: false
-            },
-            "Mercredi": {
-                items: [
-                    { name: "Pâtes", price: "8,20€", val: "" },
-                    { name: "Panier du jour", price: "8,90€", val: "" },
-                    { name: "Végé", price: "8,20€", val: "" }
-                ], hidden: false
-            },
-            "Jeudi": {
-                items: [
-                    { name: "Panier du jour", price: "8,90€", val: "" },
-                    { name: "Végé", price: "8,20€", val: "" }
-                ], hidden: false
-            },
-            "Vendredi": {
-                items: [
-                    { name: "Panier du jour", price: "8,90€", val: "" },
-                    { name: "Végé", price: "8,20€", val: "" }
-                ], hidden: false
-            }
-        };
+        const defaultCategories = [
+            { name: "Entrée végé",        price: "3,40€"  },
+            { name: "Pâtes",              price: "8,20€"  },
+            { name: "Plat chaud",         price: "8,90€"  },
+            { name: "Végétarien chaud",   price: "8,20€"  },
+            { name: "Sandwich Bistro",    price: "6,00€"  },
+            { name: "Sandwich Gastro",    price: "6,40€"  },
+            { name: "Fraich'bol",         price: "8,20€"  },
+            { name: "Fraich'bol Végé",    price: "8,20€"  },
+            { name: "Dessert",            price: "3,40€"  }
+        ];
 
-        let menuData = JSON.parse(JSON.stringify(defaultMenu));
+        function buildDefaultMenu() {
+            const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+            const menu = {};
+            days.forEach(day => {
+                menu[day] = {
+                    items: defaultCategories.map(c => ({ name: c.name, price: c.price, val: "" })),
+                    hidden: false
+                };
+            });
+            return menu;
+        }
+
+        const defaultMenu = buildDefaultMenu();
+
+        let menuData = buildDefaultMenu();
 
         function loadMenu() {
             const container = document.getElementById('menuList');
@@ -1053,7 +1074,7 @@
 
         function resetMenu() {
             if (confirm("Réinitialiser toute la semaine ?")) {
-                menuData = JSON.parse(JSON.stringify(defaultMenu));
+                menuData = buildDefaultMenu();
                 loadMenu();
             }
         }
@@ -1081,48 +1102,132 @@
             if (!text.trim()) return;
 
             const daysOrder = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+
+            // Correspondance catégorie → prix
+            const priceRules = [
+                { keys: ['potage', 'soupe'],                         price: '2,50€'  },
+                { keys: ['entrée végé', 'entrée végétarienne'],      price: '3,40€'  },
+                { keys: ['entrée'],                                  price: '3,40€'  },
+                { keys: ['pâtes', 'pasta', 'quiche'],               price: '8,20€'  },
+                { keys: ['plat chaud'],                              price: '8,90€'  },
+                { keys: ['végétarien chaud', 'végé chaud'],          price: '8,20€'  },
+                { keys: ['sandwich bistro', 'bistro'],               price: '6,00€'  },
+                { keys: ['sandwich gastro', 'gastro'],               price: '6,40€'  },
+                { keys: ["fraich'bol végé", "fraichbol végé"],       price: '8,20€'  },
+                { keys: ["fraich'bol", "fraichbol"],                 price: '8,20€'  },
+                { keys: ['dessert'],                                  price: '3,40€'  },
+            ];
+
+            function normalize(str) {
+                return str.toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/['']/g, "'");
+            }
+
+            function getPrice(categoryName) {
+                const n = normalize(categoryName);
+                for (const { keys, price } of priceRules) {
+                    if (keys.some(k => n.includes(normalize(k)))) return price;
+                }
+                return '8,90€';
+            }
+
+            // Réinitialiser complètement le menu
+            daysOrder.forEach(day => {
+                menuData[day] = { items: [], hidden: false };
+            });
+
             const lines = text.split('\n');
+
+            // Chercher la ligne d'en-tête qui contient les dates de livraison
+            const dayHeaders = [];
+            const dayFR = { lundi:'Lundi', mardi:'Mardi', mercredi:'Mercredi', jeudi:'Jeudi', vendredi:'Vendredi' };
+            
+            for (let i = 0; i < Math.min(5, lines.length); i++) {
+                const lineParts = lines[i].split('\t');
+                let foundHeader = false;
+                lineParts.forEach((cell, idx) => {
+                    const m = cell.toLowerCase().match(/livraison le (lundi|mardi|mercredi|jeudi|vendredi)/);
+                    if (m) {
+                        dayHeaders.push({ col: idx, dayName: dayFR[m[1]] });
+                        foundHeader = true;
+                    }
+                });
+                if (foundHeader) break;
+            }
+
+            function getDayForCol(col) {
+                if (dayHeaders.length > 0) {
+                    let bestDay = null;
+                    let minDistance = Infinity;
+                    dayHeaders.forEach(dh => {
+                        const expectedDlcCol = dh.col - 2;
+                        const dist = Math.abs(col - expectedDlcCol);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestDay = dh.dayName;
+                        }
+                    });
+                    return minDistance <= 2 ? bestDay : null;
+                } else {
+                    // Repli (fallback) : colonnes espacées de 5 colonnes à partir de col 1
+                    const expectedDlcCols = [1, 6, 11, 16, 21];
+                    let bestIndex = -1;
+                    let minDistance = Infinity;
+                    expectedDlcCols.forEach((expectedCol, idx) => {
+                        const dist = Math.abs(col - expectedCol);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestIndex = idx;
+                        }
+                    });
+                    if (minDistance <= 2 && bestIndex >= 0 && bestIndex < daysOrder.length) {
+                        return daysOrder[bestIndex];
+                    }
+                    return null;
+                }
+            }
 
             lines.forEach(line => {
                 if (!line.trim()) return;
-                
-                // On extrait la catégorie (le début de la ligne avant tabs/DLC)
-                // Format: Categorie [TAB] DLC ...
+
                 const parts = line.split('\t');
                 const categoryName = parts[0].trim();
-                
-                // Recherche des blocs de plats par DLC
-                // On récupère tout ce qui suit la catégorie
-                const content = line.substring(line.indexOf(parts[0]) + parts[0].length).trim();
-                
-                // Regex pour trouver les blocs "DLC DD/MM/YY [CODE] [PLAT]"
-                // Les plats finissent souvent par plusieurs tabs
-                const dlcBlocks = content.split(/DLC\s+\d{2}\/\d{2}\/\d{2}/).filter(p => p.trim());
-                
-                dlcBlocks.forEach((block, index) => {
-                    // Chaque bloc commence par le code (4 chiffres) puis le nom du plat
-                    const match = block.trim().match(/^(\d+)\s+(.+)$/);
-                    if (match && index < daysOrder.length) {
-                        const dishName = match[2].trim().replace(/\t+/g, ' ');
-                        const day = daysOrder[index];
-                        
-                        // Chercher la catégorie correspondante dans le jour (ou la première dispo)
-                        // On normalise un peu (Plat chaud v. Pâtes v. Végé)
-                        let targetItem = menuData[day].items.find(it => it.name.toLowerCase().includes(categoryName.toLowerCase()) || categoryName.toLowerCase().includes(it.name.toLowerCase()));
-                        
-                        if (!targetItem) {
-                            // Si pas trouvé, on prend le premier item vide ou on en crée un
-                            targetItem = menuData[day].items.find(it => !it.val);
+
+                // Ignorer les lignes d'en-tête (semaine, dates, livraison…)
+                if (!categoryName
+                    || /^S\d+/i.test(categoryName)
+                    || /^\d{2}\/\d{2}\/\d{4}/.test(categoryName)
+                    || /livraison/i.test(categoryName)
+                    || /commande/i.test(categoryName)) return;
+
+                const price = getPrice(categoryName);
+
+                // Parcourir les colonnes et détecter les entrées DLC
+                for (let col = 1; col < parts.length; col++) {
+                    const cell = (parts[col] || '').trim();
+
+                    if (/^DLC\s+\d{2}\/\d{2}\/\d{2,4}/i.test(cell)) {
+                        const day = getDayForCol(col);
+                        if (!day) continue;
+
+                        // Chercher le nom du plat dans les colonnes suivantes
+                        // (ignorer les REF purement numériques)
+                        let dishName = '';
+                        for (let k = col + 1; k < Math.min(col + 5, parts.length); k++) {
+                            const c2 = (parts[k] || '').trim();
+                            if (!c2) continue;
+                            if (/^DLC/i.test(c2)) break;   // début d'un autre jour
+                            if (/^\d+$/.test(c2)) continue; // REF numérique → skip
+                            dishName = c2.replace(/\t+/g, ' ').trim();
+                            break;
                         }
 
-                        if (targetItem) {
-                            targetItem.val = dishName;
-                        } else {
-                            // On ajoute un nouvel item si besoin
-                            menuData[day].items.push({ name: categoryName, price: "8,90€", val: dishName });
+                        if (dishName) {
+                            menuData[day].items.push({ name: categoryName, price, val: dishName });
                         }
                     }
-                });
+                }
             });
 
             toggleImportModal(false);
@@ -1142,7 +1247,9 @@
                 if (data.hidden) continue;
                 data.items.forEach((item) => {
                     const dishName = (item.val || item.name).trim();
-                    weekLabels.push(`<div class="name">${dishName}</div><div class="price">${item.price}</div>`);
+                    weekLabels.push({
+                        html: `<div class="name">${dishName}</div><div class="price">${item.price}</div>`
+                    });
                 });
             }
 
@@ -1153,7 +1260,12 @@
 
             // 2. Répartir les étiquettes de chaque exemplaire demandé
             for (let c = 0; c < copies; c++) {
-                const currentCopy = [...weekLabels];
+                // Cloner les étiquettes de la semaine et marquer le tout dernier produit comme la fin de cet exemplaire
+                const currentCopy = weekLabels.map((lbl, idx) => ({
+                    ...lbl,
+                    isLast: idx === weekLabels.length - 1,
+                    copyNum: c + 1
+                }));
                 
                 // On extrait d'abord toutes les pages complètes de 30 pour cet exemplaire
                 while (currentCopy.length >= 30) {
@@ -1190,11 +1302,22 @@
                 const pageDiv = document.createElement('div');
                 pageDiv.className = 'a4-page';
 
-                pageItems.forEach(itemHtml => {
+                pageItems.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'label';
-                    if (itemHtml) {
-                        div.innerHTML = itemHtml;
+                    if (item) {
+                        div.innerHTML = item.html;
+                        
+                        // Ajouter la classe de lot pour le contour spécifique
+                        div.classList.add(`lot-${item.copyNum}`);
+                        
+                        // Si c'est le dernier produit de l'exemplaire, ajouter un indicateur sans gâcher de place
+                        if (item.isLast) {
+                            div.classList.add('last-of-copy');
+                            div.style.position = 'relative';
+
+                            // Lot indicator badge removed - border styling retained
+                        }
                     }
                     pageDiv.appendChild(div);
                 });
