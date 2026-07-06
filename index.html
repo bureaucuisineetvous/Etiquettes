@@ -429,6 +429,15 @@
             #printZone.show-borders .label.lot-5 {
                 border: 1.5pt dashed #7c3aed !important;
             }
+            #printZone.show-cutting-lines .label {
+                border: 0.5px solid #cbd5e1 !important;
+            }
+            .last-of-copy.separator-right {
+                border-right: 2.5px solid #ef4444 !important;
+            }
+            .last-of-copy.separator-bottom {
+                border-bottom: 2.5px solid #ef4444 !important;
+            }
         }
 
         .button-group {
@@ -776,6 +785,15 @@
             .show-borders .label.lot-5 {
                 border: 1.8pt dashed #7c3aed !important;
             }
+            .show-cutting-lines .label {
+                border: 0.2pt solid #bbb !important; /* Bordure fine pour la découpe */
+            }
+            .last-of-copy.separator-right {
+                border-right: 1.5pt solid #ef4444 !important;
+            }
+            .last-of-copy.separator-bottom {
+                border-bottom: 1.5pt solid #ef4444 !important;
+            }
 
             .label .price {
                 font-weight: bold !important;
@@ -868,6 +886,10 @@
                 <!-- Chargé dynamiquement -->
             </div>
 
+            <label class="options-section" title="Affiche des lignes fines pour savoir où découper les étiquettes">
+                <input type="checkbox" id="cuttingCheckbox" onchange="toggleCuttingLines()" checked> ✂️ Lignes de découpe
+            </label>
+
             <label class="options-section" title="Affiche une bordure fine autour des étiquettes">
                 <input type="checkbox" id="contourCheckbox" onchange="toggleBorders()"> 📏 Afficher les contours (pour test)
             </label>
@@ -894,7 +916,7 @@
             </div>
         </div>
 
-        <div id="printZone"></div>
+        <div id="printZone" class="show-cutting-lines"></div>
     </div>
 
     <!-- Fenêtre Import Rapide -->
@@ -1097,6 +1119,16 @@
             }
         }
 
+        function toggleCuttingLines() {
+            const isChecked = document.getElementById('cuttingCheckbox').checked;
+            const printZone = document.getElementById('printZone');
+            if (isChecked) {
+                printZone.classList.add('show-cutting-lines');
+            } else {
+                printZone.classList.remove('show-cutting-lines');
+            }
+        }
+
         function processImport() {
             const text = document.getElementById('importArea').value;
             if (!text.trim()) return;
@@ -1110,6 +1142,7 @@
                 { keys: ['entrée'],                                  price: '3,40€'  },
                 { keys: ['pâtes', 'pasta', 'quiche'],               price: '8,20€'  },
                 { keys: ['plat chaud'],                              price: '8,90€'  },
+                { keys: ['poisson'],                                 price: '9,10€'  },
                 { keys: ['végétarien chaud', 'végé chaud'],          price: '8,20€'  },
                 { keys: ['sandwich bistro', 'bistro'],               price: '6,00€'  },
                 { keys: ['sandwich gastro', 'gastro'],               price: '6,40€'  },
@@ -1201,6 +1234,12 @@
                     || /livraison/i.test(categoryName)
                     || /commande/i.test(categoryName)) return;
 
+                // Ignorer complètement les lignes de Fraich'Bol Végé
+                const normCat = normalize(categoryName);
+                if (normCat.includes("fraich'bol vege") || normCat.includes("fraichbol vege")) {
+                    return;
+                }
+
                 const price = getPrice(categoryName);
 
                 // Parcourir les colonnes et détecter les entrées DLC
@@ -1224,7 +1263,19 @@
                         }
 
                         if (dishName) {
-                            menuData[day].items.push({ name: categoryName, price, val: dishName });
+                            const normDish = normalize(dishName);
+                            // Ignorer si le plat lui-même est une Fraich'Bol Végé
+                            if (normDish.includes("fraich'bol vege") || normDish.includes("fraichbol vege")) {
+                                continue;
+                            }
+
+                            let itemPrice = price;
+                            // Si c'est du poisson le mardi, le prix est fixé à 9,10€
+                            if (day === 'Mardi' && (normCat.includes('poisson') || normDish.includes('poisson'))) {
+                                itemPrice = '9,10€';
+                            }
+
+                            menuData[day].items.push({ name: categoryName, price: itemPrice, val: dishName });
                         }
                     }
                 }
@@ -1302,7 +1353,7 @@
                 const pageDiv = document.createElement('div');
                 pageDiv.className = 'a4-page';
 
-                pageItems.forEach(item => {
+                pageItems.forEach((item, itemIdx) => {
                     const div = document.createElement('div');
                     div.className = 'label';
                     if (item) {
@@ -1316,7 +1367,15 @@
                             div.classList.add('last-of-copy');
                             div.style.position = 'relative';
 
-                            // Lot indicator badge removed - border styling retained
+                            // Ajouter un séparateur visuel si le produit suivant appartient à un autre exemplaire sur la même page
+                            if (itemIdx < 29 && pageItems[itemIdx + 1]) {
+                                const isEndOfRow = (itemIdx + 1) % 6 === 0;
+                                if (isEndOfRow) {
+                                    div.classList.add('separator-bottom');
+                                } else {
+                                    div.classList.add('separator-right');
+                                }
+                            }
                         }
                     }
                     pageDiv.appendChild(div);
