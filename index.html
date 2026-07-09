@@ -429,14 +429,24 @@
             #printZone.show-borders .label.lot-5 {
                 border: 1.5pt dashed #7c3aed !important;
             }
-            #printZone.show-cutting-lines .label {
-                border: 0.5px solid #cbd5e1 !important;
+
+            .last-of-copy.separator-right::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                border-right: 1.5px solid #64748b !important;
+                z-index: 10;
             }
-            .last-of-copy.separator-right {
-                border-right: 2.5px solid #ef4444 !important;
-            }
-            .last-of-copy.separator-bottom {
-                border-bottom: 2.5px solid #ef4444 !important;
+            .last-of-copy.separator-bottom::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-bottom: 1.5px solid #64748b !important;
+                z-index: 10;
             }
         }
 
@@ -785,14 +795,24 @@
             .show-borders .label.lot-5 {
                 border: 1.8pt dashed #7c3aed !important;
             }
-            .show-cutting-lines .label {
-                border: 0.2pt solid #bbb !important; /* Bordure fine pour la découpe */
+
+            .last-of-copy.separator-right::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                border-right: 0.75pt solid #64748b !important;
+                z-index: 10;
             }
-            .last-of-copy.separator-right {
-                border-right: 1.5pt solid #ef4444 !important;
-            }
-            .last-of-copy.separator-bottom {
-                border-bottom: 1.5pt solid #ef4444 !important;
+            .last-of-copy.separator-bottom::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-bottom: 0.75pt solid #64748b !important;
+                z-index: 10;
             }
 
             .label .price {
@@ -886,9 +906,6 @@
                 <!-- Chargé dynamiquement -->
             </div>
 
-            <label class="options-section" title="Affiche des lignes fines pour savoir où découper les étiquettes">
-                <input type="checkbox" id="cuttingCheckbox" onchange="toggleCuttingLines()" checked> ✂️ Lignes de découpe
-            </label>
 
             <label class="options-section" title="Affiche une bordure fine autour des étiquettes">
                 <input type="checkbox" id="contourCheckbox" onchange="toggleBorders()"> 📏 Afficher les contours (pour test)
@@ -916,7 +933,7 @@
             </div>
         </div>
 
-        <div id="printZone" class="show-cutting-lines"></div>
+        <div id="printZone"></div>
     </div>
 
     <!-- Fenêtre Import Rapide -->
@@ -937,30 +954,31 @@
         <div class="modal-content">
             <span class="close-modal" onclick="toggleTuto(false)">&times;</span>
             <h2>🚀 Guide d'utilisation</h2>
+            
+            <h3>1. Importer vos plats</h3>
+            <p>Utilisez l'import rapide pour charger vos plats instantanément. L'aperçu à droite se met à jour automatiquement. Dans le fichier Proposition de Menu, sélectionnez toute une semaine complète.</p>
 
-            <h3>1. Remplir vos plats</h3>
-            <p>Tapez le nom de vos plats dans les cases blanches. L'aperçu à droite se met à jour instantanément.</p>
-
-            <h3>2. Personnaliser les catégories</h3>
-            <p>Cliquez directement sur les noms grisés (ex: "Pâtes", "Végé") pour les renommer selon vos besoins.</p>
-
-            <h3>3. Gérer votre semaine</h3>
+            <h3>2. Gérer votre semaine</h3>
             <ul>
-                <li><strong>👁️ Icône Œil :</strong> Masque ou affiche une journée entière (sans supprimer les données).
-                </li>
+                <li><strong>👁️ Icône Œil :</strong> Masque ou affiche une journée entière (sans supprimer les données).</li>
                 <li><strong>✕ Petite croix :</strong> Supprime une seule étiquette.</li>
-                <li><strong>+ Ajouter un produit :</strong> Crée une nouvelle étiquette via des modèles (Pâtes,
-                    Poisson...) ou personnalisée.</li>
+                <li><strong>+ Ajouter un produit :</strong> Crée une nouvelle étiquette via des modèles ou une saisie personnalisée.</li>
             </ul>
+
+            <h3>3. Ajustements</h3>
+            <p>Si le texte dépasse de l'étiquette, supprimez les ingrédients superflus ou réduisez la longueur du texte pour assurer une impression propre.</p>
 
             <h3>4. Lancer l'impression</h3>
             <p>Une fois votre semaine prête, réglez le nombre d'exemplaires et cliquez sur <b>Imprimer</b>.</p>
-            <p style="background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; font-size: 0.9rem;">
-                ⚠️ <b>Important :</b> Dans la fenêtre d'impression, réglez l'échelle sur <b>100% (Taille réelle)</b> et
-                les marges sur <b>Aucune</b> pour que les étiquettes fassent bien 30x50mm.
-                <br><br>
-                💡 <b>Astuce :</b> Utilisez le bouton <b>"Afficher les contours"</b> pour imprimer une feuille de test et vérifier l'alignement sur votre papier physique.
-            </p>
+
+            <div style="background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; font-size: 0.9rem; margin-top: 15px;">
+                <p style="margin: 0 0 10px 0;">
+                    ⚠️ <b>Important :</b> Dans la fenêtre d'impression, réglez l'échelle sur <b>100% (Taille réelle)</b> et les marges sur <b>Aucune</b> pour que les étiquettes fassent bien 30x50mm. De plus, placez la grosse languette de la feuille d'étiquettes vers l'intérieur de l'imprimante.
+                </p>
+                <p style="margin: 0;">
+                    💡 <b>Astuce :</b> Utilisez le bouton <b>"Afficher les contours"</b> pour imprimer une feuille de test et vérifier l'alignement sur votre papier physique.
+                </p>
+            </div>
 
             <button class="btn-generate" onclick="toggleTuto(false)" style="margin-top: 30px;">J'ai compris !</button>
         </div>
@@ -1119,15 +1137,6 @@
             }
         }
 
-        function toggleCuttingLines() {
-            const isChecked = document.getElementById('cuttingCheckbox').checked;
-            const printZone = document.getElementById('printZone');
-            if (isChecked) {
-                printZone.classList.add('show-cutting-lines');
-            } else {
-                printZone.classList.remove('show-cutting-lines');
-            }
-        }
 
         function processImport() {
             const text = document.getElementById('importArea').value;
