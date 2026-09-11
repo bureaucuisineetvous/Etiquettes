@@ -850,15 +850,15 @@
                             <span class="template-name">Pâtes</span>
                             <span class="template-price">8,20€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Panier du jour', '8,90€')">
+                        <div class="template-card" onclick="confirmAddItem('Panier du jour', '9,20€')">
                             <span class="template-name">Panier du jour</span>
                             <span class="template-price">8,90€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Végé', '8,20€')">
+                        <div class="template-card" onclick="confirmAddItem('Végé', '8,50€')">
                             <span class="template-name">Végé</span>
                             <span class="template-price">8,20€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Poisson', '9,10€')">
+                        <div class="template-card" onclick="confirmAddItem('Poisson', '9,40€')">
                             <span class="template-name">Poisson</span>
                             <span class="template-price">9,10€</span>
                         </div>
@@ -866,23 +866,23 @@
                             <span class="template-name">Entrée</span>
                             <span class="template-price">3,40€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Dessert', '3,40€')">
+                        <div class="template-card" onclick="confirmAddItem('Dessert', '3,60€')">
                             <span class="template-name">Dessert</span>
                             <span class="template-price">3,40€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Fraich\'Bol', '8,20€')">
+                        <div class="template-card" onclick="confirmAddItem('Fraich\'Bol', '8,40€')">
                             <span class="template-name">Fraich'Bol</span>
                             <span class="template-price">8,20€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Quiche', '7,20€')">
+                        <div class="template-card" onclick="confirmAddItem('Quiche', '7,50€')">
                             <span class="template-name">Quiche</span>
                             <span class="template-price">7,20€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Pique-mie bistro', '6,00€')">
+                        <div class="template-card" onclick="confirmAddItem('Pique-mie bistro', '6,20€')">
                             <span class="template-name">Pique-mie bistro</span>
                             <span class="template-price">6,00€</span>
                         </div>
-                        <div class="template-card" onclick="confirmAddItem('Pique-mie gastro', '6,40€')">
+                        <div class="template-card" onclick="confirmAddItem('Pique-mie gastro', '6,80€')">
                             <span class="template-name">Pique-mie gastro</span>
                             <span class="template-price">6,40€</span>
                         </div>
@@ -989,8 +989,9 @@
             { name: "Entrée végé",        price: "3,40€"  },
             { name: "Pâtes",              price: "8,20€"  },
             { name: "Panier",             price: "9,20€"  },
-            { name: "Poisson",            price: "9,20€"  },
+            { name: "Poisson",            price: "9,40€"  },
             { name: "Végétarien chaud",   price: "8,50€"  },
+            { name: "Quiche",             price: "7,50€"  },
             { name: "Sandwich Bistro",    price: "6,20€"  },
             { name: "Sandwich Gastro",    price: "6,80€"  },
             { name: "Fraich'bol",         price: "8,40€"  },
@@ -1147,19 +1148,20 @@
 
             // Correspondance catégorie → prix
             const priceRules = [
-                { keys: ['potage', 'soupe'],                         price: '2,50€'  },
-                { keys: ['entrée végé', 'entrée végétarienne'],      price: '3,40€'  },
-                { keys: ['entrée'],                                  price: '3,40€'  },
-                { keys: ['pâtes', 'pasta', 'quiche'],               price: '8,20€'  },
-                { keys: ['plat chaud'],                              price: '8,90€'  },
-                { keys: ['poisson'],                                 price: '9,10€'  },
-                { keys: ['végétarien chaud', 'végé chaud'],          price: '8,20€'  },
-                { keys: ['sandwich bistro', 'bistro'],               price: '6,00€'  },
-                { keys: ['sandwich gastro', 'gastro'],               price: '6,40€'  },
-                { keys: ["fraich'bol végé", "fraichbol végé"],       price: '8,20€'  },
-                { keys: ["fraich'bol", "fraichbol"],                 price: '8,20€'  },
-                { keys: ['dessert'],                                  price: '3,40€'  },
-            ];
+    { keys: ['potage', 'soupe'],                    price: '2,50€' },
+    { keys: ['entrée végé', 'entrée végétarienne'], price: '3,40€' },
+    { keys: ['entrée'],                             price: '3,40€' },
+    { keys: ['pâtes', 'pasta'],                     price: '8,20€' },
+    { keys: ['panier', 'plat chaud'],               price: '9,20€' },
+    { keys: ['poisson'],                            price: '9,40€' },
+    { keys: ['végétarien chaud', 'végé chaud'],     price: '8,50€' },
+    { keys: ['quiche'],                             price: '7,50€' },
+    { keys: ['sandwich bistro', 'bistro'],          price: '6,20€' },
+    { keys: ['sandwich gastro', 'gastro'],          price: '6,80€' },
+    { keys: ["fraich'bol végé", "fraichbol végé"],  price: '8,40€' },
+    { keys: ["fraich'bol", "fraichbol"],            price: '8,40€' },
+    { keys: ['dessert'],                            price: '3,60€' }
+];
 
             function normalize(str) {
                 return str.toLowerCase()
@@ -1280,9 +1282,9 @@
                             }
 
                             let itemPrice = price;
-                            // Si c'est du poisson le mardi, le prix est fixé à 9,10€
+                            // Si c'est du poisson le mardi, le prix est fixé à 9,40€
                             if (day === 'Mardi' && (normCat.includes('poisson') || normDish.includes('poisson'))) {
-                                itemPrice = '9,10€';
+                                itemPrice = '9,40€';
                             }
 
                             menuData[day].items.push({ name: categoryName, price: itemPrice, val: dishName });
